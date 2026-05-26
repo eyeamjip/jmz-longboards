@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Longboards CRM — Pitch Preview</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@700;900&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Inter', sans-serif; background: #FAE3D2; min-height: 100vh; padding: 48px 24px; }
+    .wrap { max-width: 760px; margin: 0 auto; }
+
+    /* Header */
+    .header { margin-bottom: 48px; text-align: center; }
+    .eyebrow { font-size: 11px; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase;
+      color: #E1195F; margin-bottom: 12px; }
+    .title { font-family: 'Fraunces', serif; font-size: 36px; font-weight: 900; color: #282561; line-height: 1.15; }
+    .tagline { font-size: 15px; color: #6b5e55; margin-top: 10px; line-height: 1.6; white-space: nowrap; }
+    .byline { font-size: 15px; color: #6b5e55; margin-top: 4px; }
+
+    /* Logo */
+    .logo { width: 192px; height: 192px; border-radius: 50%; object-fit: cover; margin: 0 auto 20px; display: block; }
+
+    /* Cards */
+    .cards { display: grid; grid-template-columns: 1fr; gap: 16px; max-width: 420px; margin: 0 auto; }
+    .card {
+      background: white; border-radius: 14px; border: 1.5px solid #E5E0D8;
+      padding: 24px; text-decoration: none; display: block;
+      transition: all 0.18s ease;
+    }
+    .card:hover { border-color: #E1195F; transform: translateY(-2px); box-shadow: 0 8px 24px rgba(225,25,95,0.12); }
+    .card-label { font-size: 10px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase;
+      color: #F57F38; margin-bottom: 10px; }
+    .card-title { font-family: 'Fraunces', serif; font-size: 20px; font-weight: 700; color: #282561; margin-bottom: 8px; }
+    .card-desc { font-size: 13px; color: #6b7280; line-height: 1.55; }
+    .card-arrow { display: flex; justify-content: flex-end; margin-top: 16px; color: #E1195F; font-size: 20px; }
+
+    /* Footer */
+    .footer { margin-top: 48px; font-size: 12px; color: #9ca3af; text-align: center; }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <header class="header">
+      <img src="https://longboardswrapsandbowls.com/media/qwiebdf1/logo_lg.png" alt="Longboards Wraps & Bowls" class="logo">
+      <div class="eyebrow">Longboards Wraps &amp; Bowls · Pitch Preview</div>
+      <h1 class="title">Operations CRM</h1>
+      <p class="tagline">Prototype demonstrating automated expense processing across all 8 locations.</p>
+      <p class="byline">Built by JMZ Technology Solutions.</p>
+    </header>
+
+    <div class="cards">
+      <a class="card" href="crm-focused.html">
+        <div class="card-label">Pitch · Version A</div>
+        <div class="card-title">Quick Win</div>
+        <p class="card-desc">Focused on Amber's daily expense workflow — upload receipts, watch them auto-categorize, and manage the approval queue.</p>
+        <div class="card-arrow">→</div>
+      </a>
+      <a class="card" href="crm-full.html">
+        <div class="card-label">Pitch · Version B</div>
+        <div class="card-title">Full Ops CRM</div>
+        <p class="card-desc">The complete back-office platform — expense processing, all 8 location dashboards, vendor directory, reports, and settings.</p>
+        <div class="card-arrow">→</div>
+      </a>
+    </div>
+
+    <div class="footer">JMZ Technology Solutions &nbsp;·&nbsp; Confidential pitch prototype &nbsp;·&nbsp; 2026</div>
+  </div>
+</body>
+</html>

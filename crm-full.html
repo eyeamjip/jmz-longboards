@@ -1,0 +1,1260 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>Longboards Operations CRM — Full</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            brand:    '#E1195F',
+            'brand-dark': '#282561',
+            'brand-orange': '#F57F38',
+            'brand-teal': '#2FBDBC',
+            'brand-peach': '#FAE3D2',
+            'brand-ink': '#1C1C1C',
+            line: '#E5E0D8',
+          },
+          fontFamily: {
+            display: ['Fraunces', 'Georgia', 'serif'],
+            sans: ['Inter', 'system-ui', 'sans-serif'],
+          }
+        }
+      }
+    }
+  </script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@700;900&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <style>
+    * { box-sizing: border-box; }
+    body { background: #FAE3D2; font-family: 'Inter', sans-serif; }
+
+    .sidebar {
+      width: 256px; min-height: 100dvh; background: #282561;
+      display: flex; flex-direction: column;
+      transition: width 0.2s ease; flex-shrink: 0;
+    }
+    .sidebar.is-collapsed { width: 72px; }
+    .sidebar.is-collapsed .sb-hide { display: none; }
+    .sb-toggle {
+      position: absolute; top: 56px; right: -12px;
+      width: 24px; height: 24px; border-radius: 50%;
+      background: white; border: 1px solid #E5E0D8;
+      display: flex; align-items: center; justify-content: center;
+      cursor: pointer; z-index: 10;
+    }
+    .sidebar.is-collapsed .sb-toggle i { transform: rotate(180deg); }
+
+    .nav-item {
+      display: flex; align-items: center; gap: 10px;
+      padding: 8px 12px; border-radius: 8px; margin: 1px 0;
+      color: rgba(255,255,255,0.65); font-size: 13px; font-weight: 500;
+      cursor: pointer; text-decoration: none; transition: all 0.15s;
+      white-space: nowrap;
+    }
+    .nav-item:hover { background: rgba(255,255,255,0.08); color: white; }
+    .nav-item.active { background: #E1195F; color: white; }
+    .nav-label {
+      font-size: 10px; font-weight: 600; letter-spacing: 0.08em;
+      text-transform: uppercase; color: rgba(255,255,255,0.3);
+      padding: 12px 12px 4px;
+    }
+    .sidebar.is-collapsed .nav-label { display: none; }
+
+    .view { display: none; }
+    .view.active { display: block; }
+
+    .card { background: white; border-radius: 12px; border: 1px solid #E5E0D8; }
+
+    .kpi { background: white; border-radius: 12px; border: 1px solid #E5E0D8; padding: 16px 20px; }
+    .kpi-value { font-family: 'Fraunces', serif; font-size: 28px; font-weight: 700; color: #282561; }
+    .kpi-label { font-size: 12px; color: #6b7280; margin-top: 2px; }
+
+    .badge { display: inline-flex; align-items: center; gap: 4px; padding: 2px 8px; border-radius: 99px; font-size: 11px; font-weight: 600; }
+    .badge-approved { background: #dcfce7; color: #16a34a; }
+    .badge-pending   { background: #fef3c7; color: #d97706; }
+    .badge-flagged   { background: #fee2e2; color: #dc2626; }
+    .badge-info      { background: #dbeafe; color: #2563eb; }
+
+    .data-table { width: 100%; border-collapse: collapse; }
+    .data-table th { font-size: 11px; font-weight: 600; text-transform: uppercase;
+      letter-spacing: 0.05em; color: #9ca3af; padding: 8px 12px;
+      border-bottom: 1px solid #E5E0D8; text-align: left; }
+    .data-table td { font-size: 13px; padding: 10px 12px; border-bottom: 1px solid #f3f0ec; color: #374151; }
+    .data-table tr:last-child td { border-bottom: none; }
+    .data-table tr:hover td { background: #fdf8f5; }
+
+    .btn-primary { background: #E1195F; color: white; padding: 8px 16px; border-radius: 8px;
+      font-size: 13px; font-weight: 600; border: none; cursor: pointer; transition: background 0.15s; }
+    .btn-primary:hover { background: #c4164f; }
+    .btn-ghost { background: transparent; color: #374151; padding: 6px 12px; border-radius: 8px;
+      font-size: 12px; font-weight: 500; border: 1px solid #E5E0D8; cursor: pointer; }
+    .btn-ghost:hover { background: #f9f5f0; }
+
+    .upload-zone {
+      border: 2px dashed #E5E0D8; border-radius: 12px; padding: 40px;
+      text-align: center; cursor: pointer; transition: all 0.2s;
+      background: #fffaf7;
+    }
+    .upload-zone:hover, .upload-zone.active { border-color: #E1195F; background: #fff0f5; }
+
+    #mobileOverlay {
+      display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.4); z-index: 40;
+    }
+    #mobileOverlay.open { display: block; }
+
+    @media (max-width: 1023px) {
+      .sidebar { position: fixed; left: -256px; z-index: 50; transition: left 0.25s ease; min-height: 100dvh; }
+      .sidebar.mobile-expanded { left: 0; }
+      .main-layout { margin-left: 0 !important; }
+    }
+  </style>
+</head>
+<body class="flex">
+<div id="mobileOverlay"></div>
+
+<!-- SIDEBAR -->
+<aside class="sidebar relative" id="sidebar">
+  <div class="flex items-center gap-3 px-4 py-4 border-b border-white/10">
+    <div class="w-9 h-9 rounded-xl bg-brand flex items-center justify-center shrink-0">
+      <span class="text-white font-bold text-sm font-display">LB</span>
+    </div>
+    <div class="sb-hide leading-tight overflow-hidden">
+      <div class="text-white font-bold text-sm font-display truncate">Longboards</div>
+      <div class="text-white/40 text-[10px] uppercase tracking-wider">Operations CRM</div>
+    </div>
+  </div>
+  <button class="sb-toggle" id="sbToggle">
+    <i data-lucide="chevron-left" class="w-3 h-3 text-gray-400"></i>
+  </button>
+  <nav class="flex-1 overflow-y-auto py-3 px-2">
+    <div class="nav-label sb-hide">Workspace</div>
+    <a class="nav-item" data-view="overview" href="#overview">
+      <i data-lucide="layout-dashboard" class="w-4 h-4 shrink-0"></i>
+      <span class="sb-hide">Overview</span>
+    </a>
+    <a class="nav-item" data-view="expenses" href="#expenses">
+      <i data-lucide="receipt" class="w-4 h-4 shrink-0"></i>
+      <span class="sb-hide">Expense Processing</span>
+    </a>
+    <a class="nav-item" data-view="locations" href="#locations">
+      <i data-lucide="map-pin" class="w-4 h-4 shrink-0"></i>
+      <span class="sb-hide">Locations</span>
+    </a>
+    <a class="nav-item" data-view="vendors" href="#vendors">
+      <i data-lucide="truck" class="w-4 h-4 shrink-0"></i>
+      <span class="sb-hide">Vendors</span>
+    </a>
+    <a class="nav-item" data-view="reports" href="#reports">
+      <i data-lucide="bar-chart-2" class="w-4 h-4 shrink-0"></i>
+      <span class="sb-hide">Reports</span>
+    </a>
+    <a class="nav-item" data-view="settings" href="#settings">
+      <i data-lucide="settings" class="w-4 h-4 shrink-0"></i>
+      <span class="sb-hide">Settings</span>
+    </a>
+  </nav>
+  <div class="px-3 py-4 border-t border-white/10">
+    <div class="flex items-center gap-2.5">
+      <div class="w-8 h-8 rounded-full bg-brand flex items-center justify-center shrink-0">
+        <span class="text-white text-xs font-bold">AJ</span>
+      </div>
+      <div class="sb-hide overflow-hidden">
+        <div class="text-white text-xs font-semibold truncate">Amber Macapagal</div>
+        <div class="text-white/40 text-[10px] truncate">Head of Accounting</div>
+      </div>
+    </div>
+  </div>
+</aside>
+
+<!-- MAIN CONTENT -->
+<main class="flex-1 min-w-0">
+  <div class="p-4 sm:p-6 max-w-[2800px] mx-auto">
+
+    <div class="flex items-center justify-between mb-6">
+      <div class="flex items-center gap-3">
+        <button class="lg:hidden p-2 rounded-lg bg-white border border-line" id="mobileMenuBtn">
+          <i data-lucide="menu" class="w-4 h-4 text-brand-ink"></i>
+        </button>
+        <h1 class="text-lg font-bold text-brand-ink" id="breadcrumb">Overview</h1>
+      </div>
+    </div>
+
+    <!-- VIEWS (filled in Tasks 9-14) -->
+    <div class="view" id="view-overview">
+  <!-- KPI Strip -->
+  <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+    <div class="kpi">
+      <div class="flex items-center gap-2 mb-1">
+        <i data-lucide="inbox" class="w-4 h-4 text-brand"></i>
+        <span class="text-xs text-gray-500 font-medium">In Queue</span>
+      </div>
+      <div class="kpi-value">23</div>
+      <div class="kpi-label">receipts awaiting processing</div>
+    </div>
+    <div class="kpi">
+      <div class="flex items-center gap-2 mb-1">
+        <i data-lucide="check-circle" class="w-4 h-4 text-emerald-500"></i>
+        <span class="text-xs text-gray-500 font-medium">Processed Today</span>
+      </div>
+      <div class="kpi-value">14</div>
+      <div class="kpi-label">receipts auto-categorized</div>
+    </div>
+    <div class="kpi">
+      <div class="flex items-center gap-2 mb-1">
+        <i data-lucide="clock" class="w-4 h-4 text-amber-500"></i>
+        <span class="text-xs text-gray-500 font-medium">Awaiting Approval</span>
+      </div>
+      <div class="kpi-value">7</div>
+      <div class="kpi-label">receipts need review</div>
+    </div>
+    <div class="kpi">
+      <div class="flex items-center gap-2 mb-1">
+        <i data-lucide="zap" class="w-4 h-4 text-brand-orange"></i>
+        <span class="text-xs text-gray-500 font-medium">Time Saved</span>
+      </div>
+      <div class="kpi-value font-display" style="color:#F57F38">4.2h</div>
+      <div class="kpi-label">estimated today</div>
+    </div>
+  </div>
+
+  <!-- Quick actions -->
+  <div class="flex gap-3 mb-6">
+    <button class="btn-primary flex items-center gap-2" onclick="nav('expenses')">
+      <i data-lucide="upload" class="w-4 h-4"></i> Upload Receipt
+    </button>
+    <button class="btn-ghost flex items-center gap-2" onclick="nav('locations')">
+      <i data-lucide="map-pin" class="w-4 h-4"></i> View Locations
+    </button>
+  </div>
+
+  <!-- Recent activity -->
+  <div class="card overflow-hidden mb-4">
+    <div class="px-4 py-3 border-b border-line flex items-center justify-between">
+      <h2 class="font-semibold text-brand-ink text-sm">Recent Activity</h2>
+      <span class="text-xs text-gray-400">Today, May 25</span>
+    </div>
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>Vendor</th><th>Amount</th><th>Category</th><th>Location</th><th>Status</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="font-medium">Sysco Foods</td>
+          <td>$847.32</td>
+          <td><span class="text-xs bg-blue-50 text-blue-700 px-2 py-0.5 rounded-full">Food &amp; Bev</span></td>
+          <td class="text-gray-500">Lawrence, KS</td>
+          <td><span class="badge badge-approved">✓ Approved</span></td>
+        </tr>
+        <tr>
+          <td class="font-medium">Restaurant Depot</td>
+          <td>$312.10</td>
+          <td><span class="text-xs bg-purple-50 text-purple-700 px-2 py-0.5 rounded-full">Supplies</span></td>
+          <td class="text-gray-500">Kansas City, MO</td>
+          <td><span class="badge badge-pending">⏳ Pending</span></td>
+        </tr>
+        <tr>
+          <td class="font-medium">Cintas</td>
+          <td>$198.00</td>
+          <td><span class="text-xs bg-indigo-50 text-indigo-700 px-2 py-0.5 rounded-full">Uniforms</span></td>
+          <td class="text-gray-500">Overland Park, KS</td>
+          <td><span class="badge badge-approved">✓ Approved</span></td>
+        </tr>
+        <tr>
+          <td class="font-medium">US Foods</td>
+          <td>$2,140.00</td>
+          <td><span class="text-xs bg-blue-50 text-blue-700 px-2 py-0.5 rounded-full">Food &amp; Bev</span></td>
+          <td class="text-gray-500">Liberty, MO</td>
+          <td><span class="badge badge-flagged">⚑ Flagged</span></td>
+        </tr>
+        <tr>
+          <td class="font-medium">AmeriGas</td>
+          <td>$94.50</td>
+          <td><span class="text-xs bg-yellow-50 text-yellow-700 px-2 py-0.5 rounded-full">Utilities</span></td>
+          <td class="text-gray-500">Mission, KS</td>
+          <td><span class="badge badge-pending">⏳ Pending</span></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Location spend snapshot -->
+  <div class="card p-4">
+    <h2 class="font-semibold text-brand-ink text-sm mb-4">Location Spend — May 2026</h2>
+    <div class="space-y-3">
+      <div class="flex items-center gap-3">
+        <div class="w-40 text-xs text-gray-600 truncate shrink-0">Lawrence, KS</div>
+        <div class="flex-1 bg-gray-100 rounded-full h-2">
+          <div class="bg-brand h-2 rounded-full" style="width:82%"></div>
+        </div>
+        <div class="text-xs text-gray-500 w-28 text-right shrink-0">$8,240 / $10,000</div>
+      </div>
+      <div class="flex items-center gap-3">
+        <div class="w-40 text-xs text-gray-600 truncate shrink-0">Kansas City, MO</div>
+        <div class="flex-1 bg-gray-100 rounded-full h-2">
+          <div class="h-2 rounded-full" style="width:99%;background:#f59e0b"></div>
+        </div>
+        <div class="text-xs text-gray-500 w-28 text-right shrink-0">$9,890 / $10,000 ⚠️</div>
+      </div>
+      <div class="flex items-center gap-3">
+        <div class="w-40 text-xs text-gray-600 truncate shrink-0">Overland Park S, KS</div>
+        <div class="flex-1 bg-gray-100 rounded-full h-2">
+          <div class="bg-brand h-2 rounded-full" style="width:61%"></div>
+        </div>
+        <div class="text-xs text-gray-500 w-28 text-right shrink-0">$6,100 / $10,000</div>
+      </div>
+      <div class="flex items-center gap-3">
+        <div class="w-40 text-xs text-gray-600 truncate shrink-0">Overland Park, KS</div>
+        <div class="flex-1 bg-gray-100 rounded-full h-2">
+          <div class="bg-brand h-2 rounded-full" style="width:71%"></div>
+        </div>
+        <div class="text-xs text-gray-500 w-28 text-right shrink-0">$7,100 / $10,000</div>
+      </div>
+      <div class="flex items-center gap-3">
+        <div class="w-40 text-xs text-gray-600 truncate shrink-0">Liberty, MO</div>
+        <div class="flex-1 bg-gray-100 rounded-full h-2">
+          <div class="bg-brand h-2 rounded-full" style="width:43%"></div>
+        </div>
+        <div class="text-xs text-gray-500 w-28 text-right shrink-0">$4,320 / $10,000</div>
+      </div>
+      <div class="flex items-center gap-3">
+        <div class="w-40 text-xs text-gray-600 truncate shrink-0">Mission, KS</div>
+        <div class="flex-1 bg-gray-100 rounded-full h-2">
+          <div class="bg-brand h-2 rounded-full" style="width:77%"></div>
+        </div>
+        <div class="text-xs text-gray-500 w-28 text-right shrink-0">$7,650 / $10,000</div>
+      </div>
+      <div class="flex items-center gap-3">
+        <div class="w-40 text-xs text-gray-600 truncate shrink-0">Lee's Summit, MO</div>
+        <div class="flex-1 bg-gray-100 rounded-full h-2">
+          <div class="bg-brand h-2 rounded-full" style="width:55%"></div>
+        </div>
+        <div class="text-xs text-gray-500 w-28 text-right shrink-0">$5,500 / $10,000</div>
+      </div>
+      <div class="flex items-center gap-3">
+        <div class="w-40 text-xs text-gray-600 truncate shrink-0">St. Joseph, MO</div>
+        <div class="flex-1 bg-gray-100 rounded-full h-2">
+          <div class="bg-brand h-2 rounded-full" style="width:48%"></div>
+        </div>
+        <div class="text-xs text-gray-500 w-28 text-right shrink-0">$4,800 / $10,000</div>
+      </div>
+    </div>
+  </div>
+</div>
+    <div class="view" id="view-expenses">
+  <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+
+    <!-- Left: Upload panel -->
+    <div>
+      <h2 class="font-semibold text-brand-ink text-sm mb-3">Upload Receipt</h2>
+      <p class="text-sm text-gray-500 mb-4">Upload a receipt and watch it get automatically extracted and categorized.</p>
+
+      <div class="upload-zone mb-4" id="b-uploadZone" onclick="startUploadDemoB()">
+        <i data-lucide="upload-cloud" class="w-10 h-10 text-brand mx-auto mb-3"></i>
+        <p class="font-semibold text-brand-ink text-sm">Drop receipt here or click to upload</p>
+        <p class="text-xs text-gray-400 mt-1">PNG · JPG · PDF</p>
+      </div>
+
+      <div class="card p-5" id="b-uploadResult" style="display:none">
+        <div class="flex items-center justify-between mb-4">
+          <h3 class="font-semibold text-brand-ink text-sm">Extracted Receipt</h3>
+          <span class="badge" id="b-uploadStatus" style="background:#fef3c7;color:#d97706">
+            <i data-lucide="loader" class="w-3 h-3"></i> Processing...
+          </span>
+        </div>
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <div class="text-xs text-gray-400 mb-1">Vendor</div>
+            <div class="font-medium text-brand-ink text-sm h-5" id="b-f-vendor"></div>
+          </div>
+          <div>
+            <div class="text-xs text-gray-400 mb-1">Amount</div>
+            <div class="font-display font-bold text-brand text-lg h-5" id="b-f-amount"></div>
+          </div>
+          <div>
+            <div class="text-xs text-gray-400 mb-1">Category</div>
+            <div class="text-sm h-5" id="b-f-category"></div>
+          </div>
+          <div>
+            <div class="text-xs text-gray-400 mb-1">Location</div>
+            <div class="text-sm h-5" id="b-f-location"></div>
+          </div>
+          <div>
+            <div class="text-xs text-gray-400 mb-1">Date</div>
+            <div class="text-sm h-5" id="b-f-date"></div>
+          </div>
+        </div>
+        <div class="flex gap-3 mt-5 pt-4 border-t border-line" id="b-uploadActions" style="display:none">
+          <button class="btn-primary" onclick="alert('Submitted for approval!')">Submit for Approval</button>
+          <button class="btn-ghost" onclick="resetUploadB()">Upload Another</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Right: Live queue -->
+    <div>
+      <h2 class="font-semibold text-brand-ink text-sm mb-3">Processing Queue</h2>
+      <div class="card overflow-hidden">
+        <table class="data-table">
+          <thead><tr><th>Vendor</th><th>Amount</th><th>Location</th><th>Status</th></tr></thead>
+          <tbody id="b-queueBody">
+            <tr>
+              <td class="font-medium">Sysco Foods</td><td>$847.32</td>
+              <td class="text-gray-500">Lawrence, KS</td>
+              <td><span class="badge badge-approved">✓ Approved</span></td>
+            </tr>
+            <tr>
+              <td class="font-medium">Restaurant Depot</td><td>$312.10</td>
+              <td class="text-gray-500">Kansas City, MO</td>
+              <td><span class="badge badge-pending">⏳ Pending</span></td>
+            </tr>
+            <tr>
+              <td class="font-medium">US Foods</td><td>$2,140.00</td>
+              <td class="text-gray-500">Liberty, MO</td>
+              <td><span class="badge badge-flagged">⚑ Flagged</span></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+  </div>
+</div>
+    <div class="view" id="view-locations">
+  <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-4" id="locationGrid">
+
+    <!-- Lawrence, KS -->
+    <div class="card p-4 cursor-pointer hover:border-brand transition-colors" onclick="toggleLocation('loc-1', this)">
+      <div class="flex items-start justify-between mb-2">
+        <div>
+          <div class="font-semibold text-brand-ink text-sm">Lawrence, KS</div>
+          <div class="text-xs text-gray-400">2540 Iowa St Suite N</div>
+        </div>
+        <i data-lucide="chevron-down" class="w-4 h-4 text-gray-400 mt-0.5 loc-chevron"></i>
+      </div>
+      <div class="mt-3">
+        <div class="font-display font-bold text-xl text-brand-dark">$8,240</div>
+        <div class="text-xs text-gray-400">MTD spend</div>
+        <div class="mt-2 bg-gray-100 rounded-full h-1.5">
+          <div class="bg-brand h-1.5 rounded-full" style="width:82%"></div>
+        </div>
+        <div class="text-xs text-gray-400 mt-1">82% of $10k budget</div>
+      </div>
+      <div class="mt-2 text-xs text-gray-500">14 receipts this month</div>
+    </div>
+
+    <!-- Kansas City, MO -->
+    <div class="card p-4 cursor-pointer hover:border-brand transition-colors" onclick="toggleLocation('loc-2', this)">
+      <div class="flex items-start justify-between mb-2">
+        <div>
+          <div class="font-semibold text-brand-ink text-sm">Kansas City, MO</div>
+          <div class="text-xs text-gray-400">6269 N Oak Trafficway</div>
+        </div>
+        <i data-lucide="chevron-down" class="w-4 h-4 text-gray-400 mt-0.5 loc-chevron"></i>
+      </div>
+      <div class="mt-3">
+        <div class="font-display font-bold text-xl text-amber-600">$9,890</div>
+        <div class="text-xs text-gray-400">MTD spend</div>
+        <div class="mt-2 bg-gray-100 rounded-full h-1.5">
+          <div class="h-1.5 rounded-full" style="width:99%;background:#f59e0b"></div>
+        </div>
+        <div class="text-xs text-amber-600 mt-1">⚠️ 99% of $10k budget</div>
+      </div>
+      <div class="mt-2 text-xs text-gray-500">21 receipts this month</div>
+    </div>
+
+    <!-- Overland Park S, KS -->
+    <div class="card p-4 cursor-pointer hover:border-brand transition-colors" onclick="toggleLocation('loc-3', this)">
+      <div class="flex items-start justify-between mb-2">
+        <div>
+          <div class="font-semibold text-brand-ink text-sm">Overland Park S, KS</div>
+          <div class="text-xs text-gray-400">8150 W 135th St</div>
+        </div>
+        <i data-lucide="chevron-down" class="w-4 h-4 text-gray-400 mt-0.5 loc-chevron"></i>
+      </div>
+      <div class="mt-3">
+        <div class="font-display font-bold text-xl text-brand-dark">$6,100</div>
+        <div class="text-xs text-gray-400">MTD spend</div>
+        <div class="mt-2 bg-gray-100 rounded-full h-1.5">
+          <div class="bg-brand h-1.5 rounded-full" style="width:61%"></div>
+        </div>
+        <div class="text-xs text-gray-400 mt-1">61% of $10k budget</div>
+      </div>
+      <div class="mt-2 text-xs text-gray-500">12 receipts this month</div>
+    </div>
+
+    <!-- Overland Park, KS -->
+    <div class="card p-4 cursor-pointer hover:border-brand transition-colors" onclick="toggleLocation('loc-4', this)">
+      <div class="flex items-start justify-between mb-2">
+        <div>
+          <div class="font-semibold text-brand-ink text-sm">Overland Park, KS</div>
+          <div class="text-xs text-gray-400">8775 W 95th St</div>
+        </div>
+        <i data-lucide="chevron-down" class="w-4 h-4 text-gray-400 mt-0.5 loc-chevron"></i>
+      </div>
+      <div class="mt-3">
+        <div class="font-display font-bold text-xl text-brand-dark">$7,100</div>
+        <div class="text-xs text-gray-400">MTD spend</div>
+        <div class="mt-2 bg-gray-100 rounded-full h-1.5">
+          <div class="bg-brand h-1.5 rounded-full" style="width:71%"></div>
+        </div>
+        <div class="text-xs text-gray-400 mt-1">71% of $10k budget</div>
+      </div>
+      <div class="mt-2 text-xs text-gray-500">16 receipts this month</div>
+    </div>
+
+    <!-- Liberty, MO -->
+    <div class="card p-4 cursor-pointer hover:border-brand transition-colors" onclick="toggleLocation('loc-5', this)">
+      <div class="flex items-start justify-between mb-2">
+        <div>
+          <div class="font-semibold text-brand-ink text-sm">Liberty, MO</div>
+          <div class="text-xs text-gray-400">1173 West Kansas Street</div>
+        </div>
+        <i data-lucide="chevron-down" class="w-4 h-4 text-gray-400 mt-0.5 loc-chevron"></i>
+      </div>
+      <div class="mt-3">
+        <div class="font-display font-bold text-xl text-brand-dark">$4,320</div>
+        <div class="text-xs text-gray-400">MTD spend</div>
+        <div class="mt-2 bg-gray-100 rounded-full h-1.5">
+          <div class="bg-brand h-1.5 rounded-full" style="width:43%"></div>
+        </div>
+        <div class="text-xs text-gray-400 mt-1">43% of $10k budget</div>
+      </div>
+      <div class="mt-2 text-xs text-gray-500">9 receipts this month</div>
+    </div>
+
+    <!-- Mission, KS -->
+    <div class="card p-4 cursor-pointer hover:border-brand transition-colors" onclick="toggleLocation('loc-6', this)">
+      <div class="flex items-start justify-between mb-2">
+        <div>
+          <div class="font-semibold text-brand-ink text-sm">Mission, KS</div>
+          <div class="text-xs text-gray-400">5415 Johnson Dr</div>
+        </div>
+        <i data-lucide="chevron-down" class="w-4 h-4 text-gray-400 mt-0.5 loc-chevron"></i>
+      </div>
+      <div class="mt-3">
+        <div class="font-display font-bold text-xl text-brand-dark">$7,650</div>
+        <div class="text-xs text-gray-400">MTD spend</div>
+        <div class="mt-2 bg-gray-100 rounded-full h-1.5">
+          <div class="bg-brand h-1.5 rounded-full" style="width:77%"></div>
+        </div>
+        <div class="text-xs text-gray-400 mt-1">77% of $10k budget</div>
+      </div>
+      <div class="mt-2 text-xs text-gray-500">18 receipts this month</div>
+    </div>
+
+    <!-- Lee's Summit, MO -->
+    <div class="card p-4 cursor-pointer hover:border-brand transition-colors" onclick="toggleLocation('loc-7', this)">
+      <div class="flex items-start justify-between mb-2">
+        <div>
+          <div class="font-semibold text-brand-ink text-sm">Lee's Summit, MO</div>
+          <div class="text-xs text-gray-400">506M SE MO-291 HWY</div>
+        </div>
+        <i data-lucide="chevron-down" class="w-4 h-4 text-gray-400 mt-0.5 loc-chevron"></i>
+      </div>
+      <div class="mt-3">
+        <div class="font-display font-bold text-xl text-brand-dark">$5,500</div>
+        <div class="text-xs text-gray-400">MTD spend</div>
+        <div class="mt-2 bg-gray-100 rounded-full h-1.5">
+          <div class="bg-brand h-1.5 rounded-full" style="width:55%"></div>
+        </div>
+        <div class="text-xs text-gray-400 mt-1">55% of $10k budget</div>
+      </div>
+      <div class="mt-2 text-xs text-gray-500">11 receipts this month</div>
+    </div>
+
+    <!-- St. Joseph, MO -->
+    <div class="card p-4 cursor-pointer hover:border-brand transition-colors" onclick="toggleLocation('loc-8', this)">
+      <div class="flex items-start justify-between mb-2">
+        <div>
+          <div class="font-semibold text-brand-ink text-sm">St. Joseph, MO</div>
+          <div class="text-xs text-gray-400">106 S 7th St</div>
+        </div>
+        <i data-lucide="chevron-down" class="w-4 h-4 text-gray-400 mt-0.5 loc-chevron"></i>
+      </div>
+      <div class="mt-3">
+        <div class="font-display font-bold text-xl text-brand-dark">$4,800</div>
+        <div class="text-xs text-gray-400">MTD spend</div>
+        <div class="mt-2 bg-gray-100 rounded-full h-1.5">
+          <div class="bg-brand h-1.5 rounded-full" style="width:48%"></div>
+        </div>
+        <div class="text-xs text-gray-400 mt-1">48% of $10k budget</div>
+      </div>
+      <div class="mt-2 text-xs text-gray-500">10 receipts this month</div>
+    </div>
+
+  </div>
+
+  <!-- Inline detail panel -->
+  <div id="loc-detail" class="card p-5" style="display:none">
+    <div class="flex items-center justify-between mb-4">
+      <h3 class="font-semibold text-brand-ink" id="loc-detail-name">Location Detail</h3>
+      <button class="btn-ghost text-xs" onclick="closeLocationDetail()">Close ✕</button>
+    </div>
+    <table class="data-table">
+      <thead><tr><th>Vendor</th><th>Amount</th><th>Category</th><th>Date</th><th>Status</th></tr></thead>
+      <tbody id="loc-detail-body"></tbody>
+    </table>
+  </div>
+</div>
+    <div class="view" id="view-vendors">
+  <div class="flex items-center gap-3 mb-4">
+    <input type="text" placeholder="Search vendors..." oninput="filterVendors(this.value)"
+      class="text-sm border border-line rounded-lg px-3 py-2 bg-white w-64">
+  </div>
+  <div class="card overflow-hidden">
+    <table class="data-table" id="vendorTable">
+      <thead>
+        <tr>
+          <th>Vendor</th><th>Category</th><th>MTD Spend</th>
+          <th>Invoices</th><th>Last Invoice</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr class="vendor-row">
+          <td class="font-medium">Sysco Foods</td>
+          <td><span class="text-xs bg-blue-50 text-blue-700 px-2 py-0.5 rounded-full">Food &amp; Bev</span></td>
+          <td class="font-display font-bold text-brand-dark">$18,420</td>
+          <td class="text-gray-500">14</td>
+          <td class="text-gray-500">May 25</td>
+        </tr>
+        <tr class="vendor-row">
+          <td class="font-medium">US Foods</td>
+          <td><span class="text-xs bg-blue-50 text-blue-700 px-2 py-0.5 rounded-full">Food &amp; Bev</span></td>
+          <td class="font-display font-bold text-brand-dark">$11,880</td>
+          <td class="text-gray-500">9</td>
+          <td class="text-gray-500">May 24</td>
+        </tr>
+        <tr class="vendor-row">
+          <td class="font-medium">Gordon Food Service</td>
+          <td><span class="text-xs bg-blue-50 text-blue-700 px-2 py-0.5 rounded-full">Food &amp; Bev</span></td>
+          <td class="font-display font-bold text-brand-dark">$9,340</td>
+          <td class="text-gray-500">7</td>
+          <td class="text-gray-500">May 23</td>
+        </tr>
+        <tr class="vendor-row">
+          <td class="font-medium">Restaurant Depot</td>
+          <td><span class="text-xs bg-purple-50 text-purple-700 px-2 py-0.5 rounded-full">Supplies</span></td>
+          <td class="font-display font-bold text-brand-dark">$4,312</td>
+          <td class="text-gray-500">8</td>
+          <td class="text-gray-500">May 23</td>
+        </tr>
+        <tr class="vendor-row">
+          <td class="font-medium">Cintas</td>
+          <td><span class="text-xs bg-indigo-50 text-indigo-700 px-2 py-0.5 rounded-full">Uniforms</span></td>
+          <td class="font-display font-bold text-brand-dark">$1,584</td>
+          <td class="text-gray-500">8</td>
+          <td class="text-gray-500">May 20</td>
+        </tr>
+        <tr class="vendor-row">
+          <td class="font-medium">AmeriGas</td>
+          <td><span class="text-xs bg-yellow-50 text-yellow-700 px-2 py-0.5 rounded-full">Utilities</span></td>
+          <td class="font-display font-bold text-brand-dark">$920</td>
+          <td class="text-gray-500">3</td>
+          <td class="text-gray-500">May 18</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+    <div class="view" id="view-reports">
+  <!-- Toggle buttons -->
+  <div class="flex gap-2 mb-6">
+    <button class="btn-primary text-xs" onclick="showReport('month')" id="btn-month">This Month</button>
+    <button class="btn-ghost text-xs" onclick="showReport('quarter')" id="btn-quarter">This Quarter</button>
+    <button class="btn-ghost text-xs" onclick="showReport('year')" id="btn-year">This Year</button>
+    <button class="btn-ghost text-xs ml-auto">Export ↓</button>
+  </div>
+
+  <!-- Monthly data -->
+  <div id="report-month">
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div class="card p-5">
+        <h3 class="font-semibold text-sm text-brand-ink mb-4">Spend by Category — May 2026</h3>
+        <div class="space-y-3">
+          <div class="flex items-center gap-3">
+            <div class="text-xs w-28 text-gray-600">Food &amp; Bev</div>
+            <div class="flex-1 bg-gray-100 rounded-full h-3">
+              <div class="bg-brand h-3 rounded-full" style="width:90%"></div>
+            </div>
+            <div class="text-xs text-gray-500 w-16 text-right">$42,300</div>
+          </div>
+          <div class="flex items-center gap-3">
+            <div class="text-xs w-28 text-gray-600">Supplies</div>
+            <div class="flex-1 bg-gray-100 rounded-full h-3">
+              <div class="bg-brand-teal h-3 rounded-full" style="width:38%"></div>
+            </div>
+            <div class="text-xs text-gray-500 w-16 text-right">$18,100</div>
+          </div>
+          <div class="flex items-center gap-3">
+            <div class="text-xs w-28 text-gray-600">Utilities</div>
+            <div class="flex-1 bg-gray-100 rounded-full h-3">
+              <div class="bg-brand-orange h-3 rounded-full" style="width:17%"></div>
+            </div>
+            <div class="text-xs text-gray-500 w-16 text-right">$8,200</div>
+          </div>
+          <div class="flex items-center gap-3">
+            <div class="text-xs w-28 text-gray-600">Uniforms</div>
+            <div class="flex-1 bg-gray-100 rounded-full h-3">
+              <div class="bg-purple-400 h-3 rounded-full" style="width:9%"></div>
+            </div>
+            <div class="text-xs text-gray-500 w-16 text-right">$4,100</div>
+          </div>
+          <div class="flex items-center gap-3">
+            <div class="text-xs w-28 text-gray-600">Other</div>
+            <div class="flex-1 bg-gray-100 rounded-full h-3">
+              <div class="bg-gray-400 h-3 rounded-full" style="width:7%"></div>
+            </div>
+            <div class="text-xs text-gray-500 w-16 text-right">$3,400</div>
+          </div>
+        </div>
+      </div>
+      <div class="card p-5">
+        <h3 class="font-semibold text-sm text-brand-ink mb-4">Spend by Location — May 2026</h3>
+        <div class="space-y-2">
+          <div class="flex items-center gap-2">
+            <div class="text-xs w-32 text-gray-600 truncate">Lawrence, KS</div>
+            <div class="flex-1 bg-gray-100 rounded-full h-2.5"><div class="bg-brand h-2.5 rounded-full" style="width:82%"></div></div>
+            <div class="text-xs text-gray-500 w-14 text-right">$8,240</div>
+          </div>
+          <div class="flex items-center gap-2">
+            <div class="text-xs w-32 text-gray-600 truncate">Kansas City, MO</div>
+            <div class="flex-1 bg-gray-100 rounded-full h-2.5"><div class="h-2.5 rounded-full" style="width:99%;background:#f59e0b"></div></div>
+            <div class="text-xs text-gray-500 w-14 text-right">$9,890</div>
+          </div>
+          <div class="flex items-center gap-2">
+            <div class="text-xs w-32 text-gray-600 truncate">OP South, KS</div>
+            <div class="flex-1 bg-gray-100 rounded-full h-2.5"><div class="bg-brand h-2.5 rounded-full" style="width:61%"></div></div>
+            <div class="text-xs text-gray-500 w-14 text-right">$6,100</div>
+          </div>
+          <div class="flex items-center gap-2">
+            <div class="text-xs w-32 text-gray-600 truncate">Overland Park, KS</div>
+            <div class="flex-1 bg-gray-100 rounded-full h-2.5"><div class="bg-brand h-2.5 rounded-full" style="width:71%"></div></div>
+            <div class="text-xs text-gray-500 w-14 text-right">$7,100</div>
+          </div>
+          <div class="flex items-center gap-2">
+            <div class="text-xs w-32 text-gray-600 truncate">Liberty, MO</div>
+            <div class="flex-1 bg-gray-100 rounded-full h-2.5"><div class="bg-brand-teal h-2.5 rounded-full" style="width:43%"></div></div>
+            <div class="text-xs text-gray-500 w-14 text-right">$4,320</div>
+          </div>
+          <div class="flex items-center gap-2">
+            <div class="text-xs w-32 text-gray-600 truncate">Mission, KS</div>
+            <div class="flex-1 bg-gray-100 rounded-full h-2.5"><div class="bg-brand h-2.5 rounded-full" style="width:77%"></div></div>
+            <div class="text-xs text-gray-500 w-14 text-right">$7,650</div>
+          </div>
+          <div class="flex items-center gap-2">
+            <div class="text-xs w-32 text-gray-600 truncate">Lee's Summit, MO</div>
+            <div class="flex-1 bg-gray-100 rounded-full h-2.5"><div class="bg-brand h-2.5 rounded-full" style="width:55%"></div></div>
+            <div class="text-xs text-gray-500 w-14 text-right">$5,500</div>
+          </div>
+          <div class="flex items-center gap-2">
+            <div class="text-xs w-32 text-gray-600 truncate">St. Joseph, MO</div>
+            <div class="flex-1 bg-gray-100 rounded-full h-2.5"><div class="bg-brand-teal h-2.5 rounded-full" style="width:48%"></div></div>
+            <div class="text-xs text-gray-500 w-14 text-right">$4,800</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Quarter data -->
+  <div id="report-quarter" style="display:none">
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div class="card p-5">
+        <h3 class="font-semibold text-sm text-brand-ink mb-4">Spend by Category — Q2 2026</h3>
+        <div class="space-y-3">
+          <div class="flex items-center gap-3">
+            <div class="text-xs w-28 text-gray-600">Food &amp; Bev</div>
+            <div class="flex-1 bg-gray-100 rounded-full h-3"><div class="bg-brand h-3 rounded-full" style="width:90%"></div></div>
+            <div class="text-xs text-gray-500 w-16 text-right">$124,800</div>
+          </div>
+          <div class="flex items-center gap-3">
+            <div class="text-xs w-28 text-gray-600">Supplies</div>
+            <div class="flex-1 bg-gray-100 rounded-full h-3"><div class="bg-brand-teal h-3 rounded-full" style="width:38%"></div></div>
+            <div class="text-xs text-gray-500 w-16 text-right">$53,400</div>
+          </div>
+          <div class="flex items-center gap-3">
+            <div class="text-xs w-28 text-gray-600">Utilities</div>
+            <div class="flex-1 bg-gray-100 rounded-full h-3"><div class="bg-brand-orange h-3 rounded-full" style="width:17%"></div></div>
+            <div class="text-xs text-gray-500 w-16 text-right">$24,600</div>
+          </div>
+          <div class="flex items-center gap-3">
+            <div class="text-xs w-28 text-gray-600">Uniforms</div>
+            <div class="flex-1 bg-gray-100 rounded-full h-3"><div class="bg-purple-400 h-3 rounded-full" style="width:9%"></div></div>
+            <div class="text-xs text-gray-500 w-16 text-right">$12,300</div>
+          </div>
+          <div class="flex items-center gap-3">
+            <div class="text-xs w-28 text-gray-600">Other</div>
+            <div class="flex-1 bg-gray-100 rounded-full h-3"><div class="bg-gray-400 h-3 rounded-full" style="width:7%"></div></div>
+            <div class="text-xs text-gray-500 w-16 text-right">$10,200</div>
+          </div>
+        </div>
+      </div>
+      <div class="card p-5">
+        <h3 class="font-semibold text-sm text-brand-ink mb-4">Spend by Location — Q2 2026</h3>
+        <div class="space-y-2">
+          <div class="flex items-center gap-2">
+            <div class="text-xs w-32 text-gray-600 truncate">Lawrence, KS</div>
+            <div class="flex-1 bg-gray-100 rounded-full h-2.5"><div class="bg-brand h-2.5 rounded-full" style="width:82%"></div></div>
+            <div class="text-xs text-gray-500 w-14 text-right">$24,720</div>
+          </div>
+          <div class="flex items-center gap-2">
+            <div class="text-xs w-32 text-gray-600 truncate">Kansas City, MO</div>
+            <div class="flex-1 bg-gray-100 rounded-full h-2.5"><div class="h-2.5 rounded-full" style="width:99%;background:#f59e0b"></div></div>
+            <div class="text-xs text-gray-500 w-14 text-right">$29,670</div>
+          </div>
+          <div class="flex items-center gap-2">
+            <div class="text-xs w-32 text-gray-600 truncate">OP South, KS</div>
+            <div class="flex-1 bg-gray-100 rounded-full h-2.5"><div class="bg-brand h-2.5 rounded-full" style="width:61%"></div></div>
+            <div class="text-xs text-gray-500 w-14 text-right">$18,300</div>
+          </div>
+          <div class="flex items-center gap-2">
+            <div class="text-xs w-32 text-gray-600 truncate">Overland Park, KS</div>
+            <div class="flex-1 bg-gray-100 rounded-full h-2.5"><div class="bg-brand h-2.5 rounded-full" style="width:71%"></div></div>
+            <div class="text-xs text-gray-500 w-14 text-right">$21,300</div>
+          </div>
+          <div class="flex items-center gap-2">
+            <div class="text-xs w-32 text-gray-600 truncate">Liberty, MO</div>
+            <div class="flex-1 bg-gray-100 rounded-full h-2.5"><div class="bg-brand-teal h-2.5 rounded-full" style="width:43%"></div></div>
+            <div class="text-xs text-gray-500 w-14 text-right">$12,960</div>
+          </div>
+          <div class="flex items-center gap-2">
+            <div class="text-xs w-32 text-gray-600 truncate">Mission, KS</div>
+            <div class="flex-1 bg-gray-100 rounded-full h-2.5"><div class="bg-brand h-2.5 rounded-full" style="width:77%"></div></div>
+            <div class="text-xs text-gray-500 w-14 text-right">$22,950</div>
+          </div>
+          <div class="flex items-center gap-2">
+            <div class="text-xs w-32 text-gray-600 truncate">Lee's Summit, MO</div>
+            <div class="flex-1 bg-gray-100 rounded-full h-2.5"><div class="bg-brand h-2.5 rounded-full" style="width:55%"></div></div>
+            <div class="text-xs text-gray-500 w-14 text-right">$16,500</div>
+          </div>
+          <div class="flex items-center gap-2">
+            <div class="text-xs w-32 text-gray-600 truncate">St. Joseph, MO</div>
+            <div class="flex-1 bg-gray-100 rounded-full h-2.5"><div class="bg-brand-teal h-2.5 rounded-full" style="width:48%"></div></div>
+            <div class="text-xs text-gray-500 w-14 text-right">$14,400</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Year data -->
+  <div id="report-year" style="display:none">
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div class="card p-5">
+        <h3 class="font-semibold text-sm text-brand-ink mb-4">Spend by Category — 2026 YTD</h3>
+        <div class="space-y-3">
+          <div class="flex items-center gap-3">
+            <div class="text-xs w-28 text-gray-600">Food &amp; Bev</div>
+            <div class="flex-1 bg-gray-100 rounded-full h-3"><div class="bg-brand h-3 rounded-full" style="width:90%"></div></div>
+            <div class="text-xs text-gray-500 w-16 text-right">$507,600</div>
+          </div>
+          <div class="flex items-center gap-3">
+            <div class="text-xs w-28 text-gray-600">Supplies</div>
+            <div class="flex-1 bg-gray-100 rounded-full h-3"><div class="bg-brand-teal h-3 rounded-full" style="width:38%"></div></div>
+            <div class="text-xs text-gray-500 w-16 text-right">$217,200</div>
+          </div>
+          <div class="flex items-center gap-3">
+            <div class="text-xs w-28 text-gray-600">Utilities</div>
+            <div class="flex-1 bg-gray-100 rounded-full h-3"><div class="bg-brand-orange h-3 rounded-full" style="width:17%"></div></div>
+            <div class="text-xs text-gray-500 w-16 text-right">$98,400</div>
+          </div>
+          <div class="flex items-center gap-3">
+            <div class="text-xs w-28 text-gray-600">Uniforms</div>
+            <div class="flex-1 bg-gray-100 rounded-full h-3"><div class="bg-purple-400 h-3 rounded-full" style="width:9%"></div></div>
+            <div class="text-xs text-gray-500 w-16 text-right">$49,200</div>
+          </div>
+          <div class="flex items-center gap-3">
+            <div class="text-xs w-28 text-gray-600">Other</div>
+            <div class="flex-1 bg-gray-100 rounded-full h-3"><div class="bg-gray-400 h-3 rounded-full" style="width:7%"></div></div>
+            <div class="text-xs text-gray-500 w-16 text-right">$40,800</div>
+          </div>
+        </div>
+      </div>
+      <div class="card p-5">
+        <h3 class="font-semibold text-sm text-brand-ink mb-4">Spend by Location — 2026 YTD</h3>
+        <div class="space-y-2">
+          <div class="flex items-center gap-2">
+            <div class="text-xs w-32 text-gray-600 truncate">Lawrence, KS</div>
+            <div class="flex-1 bg-gray-100 rounded-full h-2.5"><div class="bg-brand h-2.5 rounded-full" style="width:82%"></div></div>
+            <div class="text-xs text-gray-500 w-14 text-right">$98,880</div>
+          </div>
+          <div class="flex items-center gap-2">
+            <div class="text-xs w-32 text-gray-600 truncate">Kansas City, MO</div>
+            <div class="flex-1 bg-gray-100 rounded-full h-2.5"><div class="h-2.5 rounded-full" style="width:99%;background:#f59e0b"></div></div>
+            <div class="text-xs text-gray-500 w-14 text-right">$118,680</div>
+          </div>
+          <div class="flex items-center gap-2">
+            <div class="text-xs w-32 text-gray-600 truncate">OP South, KS</div>
+            <div class="flex-1 bg-gray-100 rounded-full h-2.5"><div class="bg-brand h-2.5 rounded-full" style="width:61%"></div></div>
+            <div class="text-xs text-gray-500 w-14 text-right">$73,200</div>
+          </div>
+          <div class="flex items-center gap-2">
+            <div class="text-xs w-32 text-gray-600 truncate">Overland Park, KS</div>
+            <div class="flex-1 bg-gray-100 rounded-full h-2.5"><div class="bg-brand h-2.5 rounded-full" style="width:71%"></div></div>
+            <div class="text-xs text-gray-500 w-14 text-right">$85,200</div>
+          </div>
+          <div class="flex items-center gap-2">
+            <div class="text-xs w-32 text-gray-600 truncate">Liberty, MO</div>
+            <div class="flex-1 bg-gray-100 rounded-full h-2.5"><div class="bg-brand-teal h-2.5 rounded-full" style="width:43%"></div></div>
+            <div class="text-xs text-gray-500 w-14 text-right">$51,840</div>
+          </div>
+          <div class="flex items-center gap-2">
+            <div class="text-xs w-32 text-gray-600 truncate">Mission, KS</div>
+            <div class="flex-1 bg-gray-100 rounded-full h-2.5"><div class="bg-brand h-2.5 rounded-full" style="width:77%"></div></div>
+            <div class="text-xs text-gray-500 w-14 text-right">$91,800</div>
+          </div>
+          <div class="flex items-center gap-2">
+            <div class="text-xs w-32 text-gray-600 truncate">Lee's Summit, MO</div>
+            <div class="flex-1 bg-gray-100 rounded-full h-2.5"><div class="bg-brand h-2.5 rounded-full" style="width:55%"></div></div>
+            <div class="text-xs text-gray-500 w-14 text-right">$66,000</div>
+          </div>
+          <div class="flex items-center gap-2">
+            <div class="text-xs w-32 text-gray-600 truncate">St. Joseph, MO</div>
+            <div class="flex-1 bg-gray-100 rounded-full h-2.5"><div class="bg-brand-teal h-2.5 rounded-full" style="width:48%"></div></div>
+            <div class="text-xs text-gray-500 w-14 text-right">$57,600</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+    <div class="view" id="view-settings">
+  <!-- Tab strip -->
+  <div class="flex gap-1 border-b border-line mb-6">
+    <button class="px-4 py-2 text-sm font-medium border-b-2 border-brand text-brand" onclick="showSettingsTab('categories')" id="stab-categories">Categories</button>
+    <button class="px-4 py-2 text-sm font-medium border-b-2 border-transparent text-gray-500 hover:text-brand-ink" onclick="showSettingsTab('users')" id="stab-users">Users</button>
+    <button class="px-4 py-2 text-sm font-medium border-b-2 border-transparent text-gray-500 hover:text-brand-ink" onclick="showSettingsTab('integrations')" id="stab-integrations">Integrations</button>
+  </div>
+
+  <!-- Categories tab -->
+  <div id="settings-categories">
+    <div class="flex items-center justify-between mb-4">
+      <p class="text-sm text-gray-500">Manage expense categories used across all locations.</p>
+      <button class="btn-primary text-xs" onclick="alert('Add category — coming soon')">+ Add Category</button>
+    </div>
+    <div class="card overflow-hidden">
+      <table class="data-table">
+        <thead><tr><th>Category Name</th><th>Color</th><th>Receipt Count</th><th>Actions</th></tr></thead>
+        <tbody>
+          <tr><td class="font-medium">Food &amp; Beverage</td><td><span class="w-3 h-3 rounded-full bg-blue-500 inline-block"></span></td><td class="text-gray-500">142</td><td><button class="btn-ghost text-xs py-1">Edit</button></td></tr>
+          <tr><td class="font-medium">Supplies</td><td><span class="w-3 h-3 rounded-full bg-purple-500 inline-block"></span></td><td class="text-gray-500">58</td><td><button class="btn-ghost text-xs py-1">Edit</button></td></tr>
+          <tr><td class="font-medium">Packaging</td><td><span class="w-3 h-3 rounded-full bg-green-500 inline-block"></span></td><td class="text-gray-500">34</td><td><button class="btn-ghost text-xs py-1">Edit</button></td></tr>
+          <tr><td class="font-medium">Uniforms</td><td><span class="w-3 h-3 rounded-full bg-indigo-500 inline-block"></span></td><td class="text-gray-500">28</td><td><button class="btn-ghost text-xs py-1">Edit</button></td></tr>
+          <tr><td class="font-medium">Utilities</td><td><span class="w-3 h-3 rounded-full bg-yellow-500 inline-block"></span></td><td class="text-gray-500">22</td><td><button class="btn-ghost text-xs py-1">Edit</button></td></tr>
+          <tr><td class="font-medium">Equipment</td><td><span class="w-3 h-3 rounded-full bg-orange-500 inline-block"></span></td><td class="text-gray-500">11</td><td><button class="btn-ghost text-xs py-1">Edit</button></td></tr>
+          <tr><td class="font-medium">Other</td><td><span class="w-3 h-3 rounded-full bg-gray-400 inline-block"></span></td><td class="text-gray-500">9</td><td><button class="btn-ghost text-xs py-1">Edit</button></td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Users tab -->
+  <div id="settings-users" style="display:none">
+    <div class="card p-5 max-w-md">
+      <div class="flex items-center gap-4">
+        <div class="w-12 h-12 rounded-full bg-brand flex items-center justify-center">
+          <span class="text-white font-bold">AJ</span>
+        </div>
+        <div>
+          <div class="font-semibold text-brand-ink">Amber Macapagal</div>
+          <div class="text-sm text-gray-500">Head of Accounting</div>
+          <span class="badge badge-approved text-[10px] mt-1">Active</span>
+        </div>
+        <button class="btn-ghost text-xs ml-auto">Edit</button>
+      </div>
+    </div>
+    <button class="btn-ghost text-xs mt-3" onclick="alert('Invite user — coming soon')">+ Invite User</button>
+  </div>
+
+  <!-- Integrations tab -->
+  <div id="settings-integrations" style="display:none">
+    <p class="text-sm text-gray-500 mb-4">Connect Longboards' existing tools to sync data automatically.</p>
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+      <div class="card p-5 flex items-center justify-between">
+        <div class="flex items-center gap-3">
+          <div class="w-10 h-10 rounded-lg bg-green-50 flex items-center justify-center">
+            <i data-lucide="book-open" class="w-5 h-5 text-green-600"></i>
+          </div>
+          <div>
+            <div class="font-semibold text-sm text-brand-ink">QuickBooks</div>
+            <div class="text-xs text-gray-400">Accounting sync</div>
+          </div>
+        </div>
+        <button class="btn-primary text-xs" onclick="alert('QuickBooks integration — coming soon')">Connect</button>
+      </div>
+      <div class="card p-5 flex items-center justify-between">
+        <div class="flex items-center gap-3">
+          <div class="w-10 h-10 rounded-lg bg-red-50 flex items-center justify-center">
+            <i data-lucide="monitor" class="w-5 h-5 text-red-500"></i>
+          </div>
+          <div>
+            <div class="font-semibold text-sm text-brand-ink">Toast POS</div>
+            <div class="text-xs text-gray-400">Point of sale sync</div>
+          </div>
+        </div>
+        <button class="btn-primary text-xs" onclick="alert('Toast POS integration — coming soon')">Connect</button>
+      </div>
+      <div class="card p-5 flex items-center justify-between">
+        <div class="flex items-center gap-3">
+          <div class="w-10 h-10 rounded-lg bg-blue-50 flex items-center justify-center">
+            <i data-lucide="cloud" class="w-5 h-5 text-blue-500"></i>
+          </div>
+          <div>
+            <div class="font-semibold text-sm text-brand-ink">Google Drive</div>
+            <div class="text-xs text-gray-400">Receipt storage</div>
+          </div>
+        </div>
+        <button class="btn-primary text-xs" onclick="alert('Google Drive integration — coming soon')">Connect</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+  </div>
+</main>
+
+<script>
+  const viewMap = {
+    overview: 'Overview', expenses: 'Expense Processing', locations: 'Locations',
+    vendors: 'Vendors', reports: 'Reports', settings: 'Settings'
+  };
+  const builtViews = new Set(['overview', 'expenses', 'locations', 'vendors', 'reports', 'settings']);
+
+  function nav(view) {
+    document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+    const el = document.getElementById('view-' + view);
+    if (el && builtViews.has(view)) {
+      el.classList.add('active');
+    } else {
+      document.getElementById('breadcrumb').textContent = viewMap[view] || view;
+    }
+    document.getElementById('breadcrumb').textContent = viewMap[view] || view;
+    document.querySelectorAll('[data-view]').forEach(el => {
+      el.classList.toggle('active', el.dataset.view === view);
+    });
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+    window.location.hash = view;
+  }
+
+  window.addEventListener('hashchange', () => {
+    const v = location.hash.replace('#','') || 'overview';
+    nav(viewMap[v] ? v : 'overview');
+  });
+  nav(location.hash.replace('#','') || 'overview');
+
+  (function(){
+    const sb = document.getElementById('sidebar');
+    const btn = document.getElementById('sbToggle');
+    const overlay = document.getElementById('mobileOverlay');
+    const mq = window.matchMedia('(max-width: 1023px)');
+    if (localStorage.getItem('lb:sb-full') === '1' && !mq.matches) sb.classList.add('is-collapsed');
+    mq.addEventListener('change', e => {
+      if (e.matches) sb.classList.remove('is-collapsed');
+      else { sb.classList.remove('mobile-expanded'); overlay.classList.remove('open'); document.body.style.overflow=''; }
+    });
+    btn.addEventListener('click', () => {
+      if (mq.matches) {
+        const expanded = sb.classList.toggle('mobile-expanded');
+        overlay.classList.toggle('open', expanded);
+        document.body.style.overflow = expanded ? 'hidden' : '';
+      } else {
+        const c = sb.classList.toggle('is-collapsed');
+        localStorage.setItem('lb:sb-full', c ? '1' : '0');
+      }
+    });
+    overlay.addEventListener('click', () => {
+      sb.classList.remove('mobile-expanded'); overlay.classList.remove('open'); document.body.style.overflow='';
+    });
+    document.getElementById('mobileMenuBtn')?.addEventListener('click', () => {
+      const expanded = sb.classList.toggle('mobile-expanded');
+      overlay.classList.toggle('open', expanded);
+      document.body.style.overflow = expanded ? 'hidden' : '';
+    });
+    sb.querySelectorAll('a[data-view]').forEach(el => el.addEventListener('click', () => {
+      if (sb.classList.contains('mobile-expanded')) {
+        sb.classList.remove('mobile-expanded'); overlay.classList.remove('open'); document.body.style.overflow='';
+      }
+    }));
+  })();
+
+  // Settings tab switching
+  function showSettingsTab(tab) {
+    ['categories','users','integrations'].forEach(t => {
+      document.getElementById('settings-' + t).style.display = t === tab ? 'block' : 'none';
+      const btn = document.getElementById('stab-' + t);
+      if (t === tab) {
+        btn.className = 'px-4 py-2 text-sm font-medium border-b-2 border-brand text-brand';
+      } else {
+        btn.className = 'px-4 py-2 text-sm font-medium border-b-2 border-transparent text-gray-500 hover:text-brand-ink';
+      }
+    });
+    lucide.createIcons();
+  }
+
+  // Reports toggle
+  function showReport(period) {
+    ['month','quarter','year'].forEach(p => {
+      document.getElementById('report-' + p).style.display = p === period ? 'block' : 'none';
+      const btn = document.getElementById('btn-' + p);
+      btn.className = p === period ? 'btn-primary text-xs' : 'btn-ghost text-xs';
+    });
+  }
+
+  // Vendor search filter
+  function filterVendors(q) {
+    document.querySelectorAll('.vendor-row').forEach(row => {
+      row.style.display = row.cells[0].textContent.toLowerCase().includes(q.toLowerCase()) ? '' : 'none';
+    });
+  }
+
+  // Location detail data and toggle
+  const locationData = {
+    'loc-1': { name: 'Lawrence, KS', rows: [
+      ['Sysco Foods',       '$847.32',   'Food & Bev',  'May 25', 'approved'],
+      ['Restaurant Depot',  '$312.10',   'Supplies',    'May 22', 'approved'],
+      ['Cintas',            '$198.00',   'Uniforms',    'May 20', 'approved'],
+      ['AmeriGas',          '$94.50',    'Utilities',   'May 18', 'approved'],
+    ]},
+    'loc-2': { name: 'Kansas City, MO', rows: [
+      ['US Foods',           '$2,140.00', 'Food & Bev',  'May 24', 'flagged'],
+      ['Sysco Foods',        '$1,876.40', 'Food & Bev',  'May 23', 'approved'],
+      ['Gordon Food Service','$934.00',   'Food & Bev',  'May 21', 'approved'],
+      ['Restaurant Depot',   '$441.20',   'Packaging',   'May 19', 'pending'],
+    ]},
+    'loc-3': { name: 'Overland Park S, KS', rows: [
+      ['Sysco Foods',       '$620.00',   'Food & Bev',  'May 24', 'approved'],
+      ['Cintas',            '$198.00',   'Uniforms',    'May 21', 'approved'],
+      ['Restaurant Depot',  '$280.50',   'Supplies',    'May 19', 'pending'],
+    ]},
+    'loc-4': { name: 'Overland Park, KS', rows: [
+      ['US Foods',          '$1,240.00', 'Food & Bev',  'May 23', 'approved'],
+      ['Sysco Foods',       '$710.00',   'Food & Bev',  'May 21', 'approved'],
+      ['AmeriGas',          '$94.50',    'Utilities',   'May 18', 'approved'],
+      ['Cintas',            '$198.00',   'Uniforms',    'May 16', 'approved'],
+    ]},
+    'loc-5': { name: 'Liberty, MO', rows: [
+      ['Gordon Food Service','$880.00',  'Food & Bev',  'May 22', 'approved'],
+      ['Restaurant Depot',  '$312.10',   'Supplies',    'May 20', 'approved'],
+      ['AmeriGas',          '$94.50',    'Utilities',   'May 17', 'pending'],
+    ]},
+    'loc-6': { name: 'Mission, KS', rows: [
+      ['Sysco Foods',       '$934.00',   'Food & Bev',  'May 22', 'approved'],
+      ['US Foods',          '$1,240.00', 'Food & Bev',  'May 20', 'approved'],
+      ['Cintas',            '$198.00',   'Uniforms',    'May 19', 'approved'],
+      ['AmeriGas',          '$94.50',    'Utilities',   'May 17', 'approved'],
+    ]},
+    'loc-7': { name: "Lee's Summit, MO", rows: [
+      ['Gordon Food Service','$1,876.40','Food & Bev',  'May 23', 'approved'],
+      ['Sysco Foods',        '$620.00',  'Food & Bev',  'May 21', 'approved'],
+      ['Restaurant Depot',   '$280.50',  'Packaging',   'May 19', 'pending'],
+    ]},
+    'loc-8': { name: 'St. Joseph, MO', rows: [
+      ['Sysco Foods',       '$847.32',   'Food & Bev',  'May 23', 'approved'],
+      ['US Foods',          '$710.00',   'Food & Bev',  'May 21', 'approved'],
+      ['Restaurant Depot',  '$441.20',   'Packaging',   'May 19', 'approved'],
+    ]},
+  };
+
+  let openLoc = null;
+  function toggleLocation(id, card) {
+    const detail = document.getElementById('loc-detail');
+    if (openLoc === id) { closeLocationDetail(); return; }
+    openLoc = id;
+    const data = locationData[id] || { name: id, rows: [] };
+    document.getElementById('loc-detail-name').textContent = data.name + ' — Receipt History';
+    const tbody = document.getElementById('loc-detail-body');
+    tbody.innerHTML = data.rows.map(([v, a, c, d, s]) =>
+      `<tr><td class="font-medium">${v}</td><td>${a}</td><td>${c}</td><td class="text-gray-500">${d}</td>
+       <td><span class="badge badge-${s}">${s === 'approved' ? '✓ Approved' : s === 'pending' ? '⏳ Pending' : '⚑ Flagged'}</span></td></tr>`
+    ).join('');
+    detail.style.display = 'block';
+    detail.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    document.querySelectorAll('.loc-chevron').forEach(el => el.style.transform = '');
+    card.querySelector('.loc-chevron').style.transform = 'rotate(180deg)';
+    lucide.createIcons();
+  }
+  function closeLocationDetail() {
+    document.getElementById('loc-detail').style.display = 'none';
+    document.querySelectorAll('.loc-chevron').forEach(el => el.style.transform = '');
+    openLoc = null;
+  }
+
+  // Version B upload animation
+  function typeInB(el, text, delay) {
+    return new Promise(resolve => {
+      let i = 0;
+      el.textContent = '';
+      const interval = setInterval(() => {
+        el.textContent += text[i++];
+        if (i >= text.length) { clearInterval(interval); resolve(); }
+      }, delay);
+    });
+  }
+
+  async function startUploadDemoB() {
+    const zone = document.getElementById('b-uploadZone');
+    const result = document.getElementById('b-uploadResult');
+    const status = document.getElementById('b-uploadStatus');
+    const actions = document.getElementById('b-uploadActions');
+    if (result.style.display !== 'none') return;
+
+    zone.classList.add('active');
+    result.style.display = 'block';
+    lucide.createIcons();
+
+    const fields = [
+      ['b-f-vendor',   'Sysco Foods',          30],
+      ['b-f-amount',   '$1,243.88',            40],
+      ['b-f-category', 'Food & Beverage ✓',    25],
+      ['b-f-location', 'Kansas City, MO ✓',    25],
+      ['b-f-date',     'May 25, 2026 ✓',       25],
+    ];
+
+    for (const [id, text, speed] of fields) {
+      await new Promise(r => setTimeout(r, 300));
+      await typeInB(document.getElementById(id), text, speed);
+    }
+
+    await new Promise(r => setTimeout(r, 400));
+    status.innerHTML = '✅ Ready for Review';
+    status.style.background = '#dcfce7';
+    status.style.color = '#16a34a';
+    actions.style.display = 'flex';
+    zone.classList.remove('active');
+
+    // Append new row to live queue
+    const tbody = document.getElementById('b-queueBody');
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td class="font-medium" style="background:#f0fdf4">Sysco Foods</td>
+      <td style="background:#f0fdf4">$1,243.88</td>
+      <td class="text-gray-500" style="background:#f0fdf4">Kansas City, MO</td>
+      <td style="background:#f0fdf4"><span class="badge badge-pending">⏳ Pending</span></td>`;
+    tbody.insertBefore(tr, tbody.firstChild);
+    setTimeout(() => tr.querySelectorAll('td').forEach(td => td.style.background = ''), 1500);
+  }
+
+  function resetUploadB() {
+    ['b-f-vendor','b-f-amount','b-f-category','b-f-location','b-f-date'].forEach(id => {
+      document.getElementById(id).textContent = '';
+    });
+    const status = document.getElementById('b-uploadStatus');
+    status.innerHTML = '<i data-lucide="loader" class="w-3 h-3"></i> Processing...';
+    status.style.background = '#fef3c7';
+    status.style.color = '#d97706';
+    document.getElementById('b-uploadActions').style.display = 'none';
+    document.getElementById('b-uploadResult').style.display = 'none';
+    lucide.createIcons();
+  }
+
+  lucide.createIcons();
+</script>
+</body>
+</html>
