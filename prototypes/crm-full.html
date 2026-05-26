@@ -107,6 +107,30 @@
     }
     #mobileOverlay.open { display: block; }
 
+    /* Table scroll wrapper — tables scroll horizontally inside card */
+    .table-scroll { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+    .table-scroll .data-table { min-width: 480px; }
+
+    /* Reusable layout helpers */
+    .filter-bar { display: flex; flex-wrap: wrap; gap: 12px; }
+    .btn-row { display: flex; gap: 12px; }
+
+    /* Prevent page-level horizontal overflow */
+    html, body { overflow-x: hidden; }
+
+    @media (max-width: 767px) {
+      .kpi { padding: 12px 14px; }
+      .kpi-value { font-size: 22px; }
+      .filter-bar { flex-direction: column; }
+      .filter-bar select,
+      .filter-bar input,
+      input[type="text"] { width: 100%; min-height: 44px; font-size: 16px; }
+      .btn-row { flex-direction: column; }
+      .btn-row .btn-primary,
+      .btn-row .btn-ghost { width: 100%; min-height: 44px; justify-content: center; display: flex; align-items: center; }
+      .upload-zone { padding: 24px 16px; }
+    }
+
     @media (max-width: 1023px) {
       .sidebar { position: fixed; left: -256px; z-index: 50; transition: left 0.25s ease; min-height: 100dvh; }
       .sidebar.mobile-expanded { left: 0; }
@@ -223,7 +247,7 @@
   </div>
 
   <!-- Quick actions -->
-  <div class="flex gap-3 mb-6">
+  <div class="btn-row mb-6">
     <button class="btn-primary flex items-center gap-2" onclick="nav('expenses')">
       <i data-lucide="upload" class="w-4 h-4"></i> Upload Receipt
     </button>
@@ -238,6 +262,7 @@
       <h2 class="font-semibold text-brand-ink text-sm">Recent Activity</h2>
       <span class="text-xs text-gray-400">Today, May 25</span>
     </div>
+    <div class="table-scroll">
     <table class="data-table">
       <thead>
         <tr>
@@ -282,6 +307,7 @@
         </tr>
       </tbody>
     </table>
+    </div>
   </div>
 
   <!-- Location spend snapshot -->
@@ -390,7 +416,7 @@
             <div class="text-sm h-5" id="b-f-date"></div>
           </div>
         </div>
-        <div class="flex gap-3 mt-5 pt-4 border-t border-line" id="b-uploadActions" style="display:none">
+        <div class="btn-row mt-5 pt-4 border-t border-line" id="b-uploadActions" style="display:none">
           <button class="btn-primary" onclick="alert('Submitted for approval!')">Submit for Approval</button>
           <button class="btn-ghost" onclick="resetUploadB()">Upload Another</button>
         </div>
@@ -597,18 +623,21 @@
       <h3 class="font-semibold text-brand-ink" id="loc-detail-name">Location Detail</h3>
       <button class="btn-ghost text-xs" onclick="closeLocationDetail()">Close ✕</button>
     </div>
+    <div class="table-scroll">
     <table class="data-table">
       <thead><tr><th>Vendor</th><th>Amount</th><th>Category</th><th>Date</th><th>Status</th></tr></thead>
       <tbody id="loc-detail-body"></tbody>
     </table>
+    </div>
   </div>
 </div>
     <div class="view" id="view-vendors">
   <div class="flex items-center gap-3 mb-4">
     <input type="text" placeholder="Search vendors..." oninput="filterVendors(this.value)"
-      class="text-sm border border-line rounded-lg px-3 py-2 bg-white w-64">
+      class="text-sm border border-line rounded-lg px-3 py-2 bg-white w-full sm:w-64">
   </div>
   <div class="card overflow-hidden">
+    <div class="table-scroll">
     <table class="data-table" id="vendorTable">
       <thead>
         <tr>
@@ -661,11 +690,12 @@
         </tr>
       </tbody>
     </table>
+    </div>
   </div>
 </div>
     <div class="view" id="view-reports">
   <!-- Toggle buttons -->
-  <div class="flex gap-2 mb-6">
+  <div class="flex flex-wrap gap-2 mb-6">
     <button class="btn-primary text-xs" onclick="showReport('month')" id="btn-month">This Month</button>
     <button class="btn-ghost text-xs" onclick="showReport('quarter')" id="btn-quarter">This Quarter</button>
     <button class="btn-ghost text-xs" onclick="showReport('year')" id="btn-year">This Year</button>
@@ -940,6 +970,7 @@
       <button class="btn-primary text-xs" onclick="alert('Add category — coming soon')">+ Add Category</button>
     </div>
     <div class="card overflow-hidden">
+      <div class="table-scroll">
       <table class="data-table">
         <thead><tr><th>Category Name</th><th>Color</th><th>Receipt Count</th><th>Actions</th></tr></thead>
         <tbody>
@@ -952,6 +983,7 @@
           <tr><td class="font-medium">Other</td><td><span class="w-3 h-3 rounded-full bg-gray-400 inline-block"></span></td><td class="text-gray-500">9</td><td><button class="btn-ghost text-xs py-1">Edit</button></td></tr>
         </tbody>
       </table>
+      </div>
     </div>
   </div>
 
