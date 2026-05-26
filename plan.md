@@ -26,3 +26,8 @@ Liberty MO · Mission KS · Lee's Summit MO · St. Joseph MO
 [x] index.html — complete 2026-05-25
 [x] crm-focused.html (Version A) — complete 2026-05-25
 [x] crm-full.html (Version B) — complete 2026-05-25
+[x] Mobile polish — complete 2026-05-26
+    - Fixed layout offset bug (CSS specificity)
+    - Fixed table horizontal scroll
+    - Replaced sidebar drawer with icon-only scrollable bottom nav
+[x] Deployed to GH Pages — https://eyeamjip.github.io/jmz-longboards/

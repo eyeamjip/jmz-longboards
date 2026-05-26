@@ -2,7 +2,7 @@
 
 Pitch prototype built by **JMZ Technology Solutions** for Longboards Wraps & Bowls, demonstrating automated expense processing across all 8 KC-metro locations.
 
-**Live preview:** [https://eyeamjip.github.io/jmz-longboards/prototypes/index.html](https://eyeamjip.github.io/jmz-longboards/prototypes/index.html)
+**Live preview:** [https://eyeamjip.github.io/jmz-longboards/](https://eyeamjip.github.io/jmz-longboards/)
 
 ---
 
@@ -76,6 +76,13 @@ The complete platform vision — everything Version A has, plus multi-location d
 | Peach | `#FAE3D2` | Page background |
 
 ---
+
+## Mobile
+
+Both prototypes are fully responsive. On phones (≤1023px):
+- Sidebar is replaced by a fixed bottom navigation bar
+- Icons only (26px), horizontally scrollable — swipe left/right to reach all screens
+- Active screen highlighted in pink
 
 ## Open locally
 
