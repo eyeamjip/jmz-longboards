@@ -144,27 +144,34 @@
     .bottom-nav {
       display: none;
       position: fixed; bottom: 0; left: 0; right: 0;
-      height: 64px;
       background: #282561;
       border-top: 1px solid rgba(255,255,255,0.1);
       z-index: 50;
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+      scrollbar-width: none;
+      /* safe-area for iPhone notch */
       padding-bottom: env(safe-area-inset-bottom, 0px);
     }
+    .bottom-nav::-webkit-scrollbar { display: none; }
     .bn-item {
-      flex: 1; display: flex; flex-direction: column;
-      align-items: center; justify-content: center; gap: 3px;
-      color: rgba(255,255,255,0.5); font-size: 10px; font-weight: 500;
-      cursor: pointer; text-decoration: none; padding: 8px 4px;
+      /* flex:1 0 80px — grows to fill when few items, scrolls when many */
+      flex: 1 0 80px;
+      height: 64px;
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      color: rgba(255,255,255,0.45);
+      cursor: pointer; text-decoration: none;
       border: none; background: transparent;
       -webkit-tap-highlight-color: transparent;
-      transition: color 0.15s; min-width: 0;
+      transition: color 0.15s;
     }
     .bn-item.active { color: #E1195F; }
-    .bn-item:active { opacity: 0.7; }
+    .bn-item:active { opacity: 0.65; }
 
     @media (max-width: 1023px) {
       body { display: block; }
-      main { display: block; width: 100%; padding-bottom: 72px; }
+      main { display: block; width: 100%; padding-bottom: 80px; }
       .sidebar { display: none; }
       #mobileMenuBtn { display: none !important; }
       #mobileOverlay { display: none !important; }
@@ -538,19 +545,25 @@
   </div>
 </main>
 
-<!-- BOTTOM NAV (mobile only) -->
+<!-- BOTTOM NAV (mobile only) — icon-only, horizontally scrollable -->
 <nav class="bottom-nav" id="bottomNav">
   <a class="bn-item" data-view="overview" href="#overview">
-    <i data-lucide="layout-dashboard" style="width:20px;height:20px"></i>
-    <span>Overview</span>
+    <i data-lucide="layout-dashboard" style="width:26px;height:26px"></i>
   </a>
   <a class="bn-item" data-view="upload" href="#upload">
-    <i data-lucide="upload" style="width:20px;height:20px"></i>
-    <span>Upload</span>
+    <i data-lucide="upload" style="width:26px;height:26px"></i>
   </a>
   <a class="bn-item" data-view="queue" href="#queue">
-    <i data-lucide="list-checks" style="width:20px;height:20px"></i>
-    <span>Queue</span>
+    <i data-lucide="list-checks" style="width:26px;height:26px"></i>
+  </a>
+  <a class="bn-item" data-view="locations" onclick="event.preventDefault();nav('locations')">
+    <i data-lucide="map-pin" style="width:26px;height:26px"></i>
+  </a>
+  <a class="bn-item" data-view="vendors" onclick="event.preventDefault();nav('vendors')">
+    <i data-lucide="truck" style="width:26px;height:26px"></i>
+  </a>
+  <a class="bn-item" data-view="reports" onclick="event.preventDefault();nav('reports')">
+    <i data-lucide="bar-chart-2" style="width:26px;height:26px"></i>
   </a>
 </nav>
 

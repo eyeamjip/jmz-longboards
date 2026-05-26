@@ -132,46 +132,32 @@
     .bottom-nav {
       display: none;
       position: fixed; bottom: 0; left: 0; right: 0;
-      height: 64px;
       background: #282561;
       border-top: 1px solid rgba(255,255,255,0.1);
       z-index: 50;
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+      scrollbar-width: none;
       padding-bottom: env(safe-area-inset-bottom, 0px);
     }
+    .bottom-nav::-webkit-scrollbar { display: none; }
     .bn-item {
-      flex: 1; display: flex; flex-direction: column;
-      align-items: center; justify-content: center; gap: 3px;
-      color: rgba(255,255,255,0.5); font-size: 10px; font-weight: 500;
-      cursor: pointer; text-decoration: none; padding: 8px 4px;
+      flex: 1 0 80px;
+      height: 64px;
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      color: rgba(255,255,255,0.45);
+      cursor: pointer; text-decoration: none;
       border: none; background: transparent;
       -webkit-tap-highlight-color: transparent;
-      transition: color 0.15s; min-width: 0;
+      transition: color 0.15s;
     }
     .bn-item.active { color: #E1195F; }
-    .bn-item:active { opacity: 0.7; }
-
-    /* More menu (mobile only) */
-    .more-menu {
-      display: none;
-      position: fixed; bottom: 64px; left: 0; right: 0;
-      background: white; border-top: 1px solid #E5E0D8;
-      z-index: 49; padding: 8px;
-      box-shadow: 0 -4px 20px rgba(0,0,0,0.1);
-      border-radius: 16px 16px 0 0;
-    }
-    .more-menu.open { display: block; }
-    .more-menu-item {
-      display: flex; align-items: center; gap: 12px;
-      padding: 14px 16px; border-radius: 10px;
-      color: #374151; text-decoration: none; cursor: pointer;
-      font-size: 14px; font-weight: 500;
-      transition: background 0.12s;
-    }
-    .more-menu-item:active { background: #fdf8f5; }
+    .bn-item:active { opacity: 0.65; }
 
     @media (max-width: 1023px) {
       body { display: block; }
-      main { display: block; width: 100%; padding-bottom: 72px; }
+      main { display: block; width: 100%; padding-bottom: 80px; }
       .sidebar { display: none; }
       #mobileMenuBtn { display: none !important; }
       #mobileOverlay { display: none !important; }
@@ -1093,39 +1079,26 @@
   </div>
 </main>
 
-<!-- MORE MENU (mobile only, appears above bottom nav) -->
-<div class="more-menu" id="moreMenu">
-  <a class="more-menu-item" data-view="vendors" onclick="nav('vendors');closeMoreMenu()">
-    <i data-lucide="truck" style="width:18px;height:18px;color:#E1195F"></i>
-    Vendors
-  </a>
-  <a class="more-menu-item" data-view="settings" onclick="nav('settings');closeMoreMenu()">
-    <i data-lucide="settings" style="width:18px;height:18px;color:#E1195F"></i>
-    Settings
-  </a>
-</div>
-<!-- BOTTOM NAV (mobile only) -->
+<!-- BOTTOM NAV (mobile only) — icon-only, horizontally scrollable -->
 <nav class="bottom-nav" id="bottomNav">
   <a class="bn-item" data-view="overview" href="#overview">
-    <i data-lucide="layout-dashboard" style="width:20px;height:20px"></i>
-    <span>Overview</span>
+    <i data-lucide="layout-dashboard" style="width:26px;height:26px"></i>
   </a>
   <a class="bn-item" data-view="expenses" href="#expenses">
-    <i data-lucide="receipt" style="width:20px;height:20px"></i>
-    <span>Expenses</span>
+    <i data-lucide="receipt" style="width:26px;height:26px"></i>
   </a>
   <a class="bn-item" data-view="locations" href="#locations">
-    <i data-lucide="map-pin" style="width:20px;height:20px"></i>
-    <span>Locations</span>
+    <i data-lucide="map-pin" style="width:26px;height:26px"></i>
+  </a>
+  <a class="bn-item" data-view="vendors" href="#vendors">
+    <i data-lucide="truck" style="width:26px;height:26px"></i>
   </a>
   <a class="bn-item" data-view="reports" href="#reports">
-    <i data-lucide="bar-chart-2" style="width:20px;height:20px"></i>
-    <span>Reports</span>
+    <i data-lucide="bar-chart-2" style="width:26px;height:26px"></i>
   </a>
-  <button class="bn-item" id="bn-more" onclick="toggleMoreMenu()">
-    <i data-lucide="more-horizontal" style="width:20px;height:20px"></i>
-    <span>More</span>
-  </button>
+  <a class="bn-item" data-view="settings" href="#settings">
+    <i data-lucide="settings" style="width:26px;height:26px"></i>
+  </a>
 </nav>
 
 <script>
@@ -1147,28 +1120,9 @@
     document.querySelectorAll('[data-view]').forEach(el => {
       el.classList.toggle('active', el.dataset.view === view);
     });
-    // Highlight "More" button when vendors or settings is active
-    const moreBtn = document.getElementById('bn-more');
-    if (moreBtn) moreBtn.classList.toggle('active', ['vendors','settings'].includes(view));
     window.scrollTo({ top: 0, behavior: 'smooth' });
     window.location.hash = view;
   }
-
-  function toggleMoreMenu() {
-    const menu = document.getElementById('moreMenu');
-    menu.classList.toggle('open');
-  }
-  function closeMoreMenu() {
-    document.getElementById('moreMenu').classList.remove('open');
-  }
-  // Close more menu when tapping outside
-  document.addEventListener('click', e => {
-    const menu = document.getElementById('moreMenu');
-    const btn = document.getElementById('bn-more');
-    if (menu && menu.classList.contains('open') && !menu.contains(e.target) && e.target !== btn && !btn?.contains(e.target)) {
-      menu.classList.remove('open');
-    }
-  });
 
   window.addEventListener('hashchange', () => {
     const v = location.hash.replace('#','') || 'overview';
