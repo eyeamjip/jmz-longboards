@@ -119,6 +119,30 @@
     }
     #mobileOverlay.open { display: block; }
 
+    /* Table scroll wrapper — tables scroll horizontally inside card */
+    .table-scroll { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+    .table-scroll .data-table { min-width: 480px; }
+
+    /* Reusable layout helpers */
+    .filter-bar { display: flex; flex-wrap: wrap; gap: 12px; }
+    .btn-row { display: flex; gap: 12px; }
+
+    /* Prevent page-level horizontal overflow */
+    html, body { overflow-x: hidden; }
+
+    @media (max-width: 767px) {
+      .kpi { padding: 12px 14px; }
+      .kpi-value { font-size: 22px; }
+      .filter-bar { flex-direction: column; }
+      .filter-bar select,
+      .filter-bar input,
+      input[type="text"] { width: 100%; min-height: 44px; font-size: 16px; }
+      .btn-row { flex-direction: column; }
+      .btn-row .btn-primary,
+      .btn-row .btn-ghost { width: 100%; min-height: 44px; justify-content: center; display: flex; align-items: center; }
+      .upload-zone { padding: 24px 16px; }
+    }
+
     @media (max-width: 1023px) {
       .sidebar { position: fixed; left: -256px; z-index: 50; transition: left 0.25s ease; min-height: 100dvh; }
       .sidebar.mobile-expanded { left: 0; }
@@ -258,7 +282,7 @@
   </div>
 
   <!-- Quick actions -->
-  <div class="flex gap-3 mb-6">
+  <div class="btn-row mb-6">
     <button class="btn-primary flex items-center gap-2" onclick="nav('upload')">
       <i data-lucide="upload" class="w-4 h-4"></i> Upload Receipt
     </button>
@@ -273,6 +297,7 @@
       <h2 class="font-semibold text-brand-ink text-sm">Recent Activity</h2>
       <span class="text-xs text-gray-400">Today, May 25</span>
     </div>
+    <div class="table-scroll">
     <table class="data-table">
       <thead>
         <tr>
@@ -317,6 +342,7 @@
         </tr>
       </tbody>
     </table>
+    </div>
   </div>
 </div>
 
@@ -363,7 +389,7 @@
         </div>
       </div>
       <!-- Action buttons (appear after animation) -->
-      <div class="flex gap-3 mt-5 pt-4 border-t border-line" id="uploadActions" style="display:none">
+      <div class="btn-row mt-5 pt-4 border-t border-line" id="uploadActions" style="display:none">
         <button class="btn-primary" onclick="alert('Submitted for approval!')">Submit for Approval</button>
         <button class="btn-ghost" onclick="resetUpload()">Upload Another</button>
       </div>
@@ -374,7 +400,7 @@
     <!-- Queue placeholder (filled in Task 6) -->
     <div class="view" id="view-queue">
   <!-- Filters -->
-  <div class="flex flex-wrap gap-3 mb-4">
+  <div class="filter-bar mb-4">
     <select class="text-sm border border-line rounded-lg px-3 py-2 bg-white" onchange="filterQueue()">
       <option value="">All Locations</option>
       <option>Lawrence, KS</option>
@@ -404,6 +430,7 @@
   </div>
 
   <div class="card overflow-hidden">
+    <div class="table-scroll">
     <table class="data-table" id="queueTable">
       <thead>
         <tr>
@@ -482,6 +509,7 @@
         </tr>
       </tbody>
     </table>
+    </div>
   </div>
 </div>
 
