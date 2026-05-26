@@ -115,9 +115,6 @@
     .filter-bar { display: flex; flex-wrap: wrap; gap: 12px; }
     .btn-row { display: flex; gap: 12px; }
 
-    /* Prevent page-level horizontal overflow */
-    html, body { overflow-x: hidden; }
-
     @media (max-width: 767px) {
       .kpi { padding: 12px 14px; }
       .kpi-value { font-size: 22px; }
@@ -132,9 +129,11 @@
     }
 
     @media (max-width: 1023px) {
-      .sidebar { position: fixed; left: -256px; z-index: 50; transition: left 0.25s ease; min-height: 100dvh; }
+      /* Switch off flex so position:fixed sidebar doesn't affect layout on any mobile browser */
+      body { display: block; }
+      main { display: block; width: 100%; }
+      .sidebar { position: fixed; left: -256px; width: 256px; z-index: 50; transition: left 0.25s ease; min-height: 100dvh; }
       .sidebar.mobile-expanded { left: 0; }
-      .main-layout { margin-left: 0 !important; }
     }
   </style>
 </head>
@@ -257,7 +256,7 @@
   </div>
 
   <!-- Recent activity -->
-  <div class="card overflow-hidden mb-4">
+  <div class="card mb-4">
     <div class="px-4 py-3 border-b border-line flex items-center justify-between">
       <h2 class="font-semibold text-brand-ink text-sm">Recent Activity</h2>
       <span class="text-xs text-gray-400">Today, May 25</span>
@@ -426,7 +425,7 @@
     <!-- Right: Live queue -->
     <div>
       <h2 class="font-semibold text-brand-ink text-sm mb-3">Processing Queue</h2>
-      <div class="card overflow-hidden">
+      <div class="card">
         <table class="data-table">
           <thead><tr><th>Vendor</th><th>Amount</th><th>Location</th><th>Status</th></tr></thead>
           <tbody id="b-queueBody">
@@ -636,7 +635,7 @@
     <input type="text" placeholder="Search vendors..." oninput="filterVendors(this.value)"
       class="text-sm border border-line rounded-lg px-3 py-2 bg-white w-full sm:w-64">
   </div>
-  <div class="card overflow-hidden">
+  <div class="card">
     <div class="table-scroll">
     <table class="data-table" id="vendorTable">
       <thead>
@@ -969,7 +968,7 @@
       <p class="text-sm text-gray-500">Manage expense categories used across all locations.</p>
       <button class="btn-primary text-xs" onclick="alert('Add category — coming soon')">+ Add Category</button>
     </div>
-    <div class="card overflow-hidden">
+    <div class="card">
       <div class="table-scroll">
       <table class="data-table">
         <thead><tr><th>Category Name</th><th>Color</th><th>Receipt Count</th><th>Actions</th></tr></thead>
